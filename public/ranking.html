@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ranked Candidate List</title><link rel="stylesheet" href="style.css"><script src="app.js"></script></head><body>
+<title>AI Recruit | Ranked Candidate List</title><link rel="stylesheet" href="style.css"><script src="app.js"></script></head><body>
 <script>nav()</script><main><div class="card"><h1>Ranked Candidates</h1><p id="vt"></p>
 <div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Candidate</th><th>Score</th><th>Skill</th><th>Exp.</th><th>Qual.</th><th>Cert.</th><th>Status / Decision</th></tr></thead><tbody id="rows"></tbody></table></div>
 <p><small>The AI ranks; the recruiter decides. Each criterion score is shown so the ranking can be explained.</small></p></div></main>
@@ -16,7 +16,7 @@ async function draw(){const cs=DB.get('cands',[]).filter(x=>x.applied!==false);l
   cell(i+1);cell(r.x.name);
   const d=tr.insertCell();d.innerHTML='<b></b> <span class="bar"><i></i></span>';d.firstChild.textContent=r.s.S;d.querySelector('i').style.width=r.s.S+'%';
   [r.s.skill,r.s.exp,r.s.qual,r.s.cert].forEach(n=>cell(n.toFixed(2)));
-  const a=tr.insertCell();a.textContent=r.x.status+' ';
+  const a=tr.insertCell();a.innerHTML='<span class="badge '+r.x.status.toLowerCase()+'"></span><br>';a.firstChild.textContent=r.x.status;
   [['Shortlist','alt','Shortlisted'],['Accept','ok','Accepted'],['Reject','bad','Rejected']].forEach(([t,k,st])=>{
    const b=document.createElement('button');b.textContent=t;b.className=k;b.onclick=()=>{const all=DB.get('cands',[]);all.find(y=>y.id===r.x.id).status=st;
     DB.set('cands',all);log(st+': '+r.x.name);draw()};a.appendChild(b)})})}

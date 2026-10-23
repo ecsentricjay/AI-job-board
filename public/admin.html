@@ -1,20 +1,20 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Administrator Dashboard</title><link rel="stylesheet" href="style.css"><script src="app.js"></script></head><body>
+<title>AI Recruit | Administrator Dashboard</title><link rel="stylesheet" href="style.css"><script src="app.js"></script></head><body>
 <script>nav()</script><main><div class="card"><h1>Administrator Dashboard</h1>
-<div class="grid"><div><div class="stat" id="s1"></div>Users</div><div><div class="stat" id="s2"></div>Applications</div><div><div class="stat" id="s3"></div>Accepted</div></div></div>
-<div class="card"><h2>Users</h2><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody id="u"></tbody></table></div>
+<div class="grid stats"><div><div class="stat" id="s1"></div>Users</div><div><div class="stat" id="s2"></div>Applications</div><div><div class="stat" id="s3"></div>Accepted</div></div></div>
+<div class="card"><h2>Users</h2><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Organisation</th><th>Status</th><th></th></tr></thead><tbody id="u"></tbody></table></div>
 <div class="card"><h2>Audit log</h2><table><tbody id="a"></tbody></table><button class="alt" id="clr">Clear log</button></div></main>
 <script>
 const me=DB.get('session',null);
-function draw(){const users=DB.get('users',[{name:'System Admin',email:'admin@jugo.demo',role:'admin',status:'active'}]);
+function draw(){const users=DB.get('users',SEED_USERS);
  const c=DB.get('cands',SEED);
  document.getElementById('s1').textContent=users.length;
  document.getElementById('s2').textContent=c.filter(x=>x.applied!==false).length;
  document.getElementById('s3').textContent=c.filter(x=>x.status==='Accepted').length;
  const tb=document.getElementById('u');tb.innerHTML='';
- users.forEach((u,i)=>{const tr=tb.insertRow();[u.name,u.email,u.role,u.status].forEach(t=>{tr.insertCell().textContent=t});
+ users.forEach((u,i)=>{const tr=tb.insertRow();[u.name,u.email,u.role,u.org||'-',u.status].forEach(t=>{tr.insertCell().textContent=t});tr.cells[4].innerHTML='<span class="badge '+(u.status==='active'?'active':'suspended')+'">'+(u.status==='active'?'active':'suspended')+'</span>';
   if(u.role!=='admin'){const b=document.createElement('button');b.textContent=u.status==='active'?'Suspend':'Reactivate';b.className=u.status==='active'?'bad':'ok';
-   b.onclick=()=>{u.status=u.status==='active'?'suspended':'active';DB.set('users',users);log(b.textContent+': '+u.email);draw()};tr.insertCell().appendChild(b)}});
+   b.onclick=()=>{u.status=u.status==='active'?'suspended':'active';DB.set('users',users);log(b.textContent+': '+u.email);draw()};tr.insertCell().appendChild(b)}else tr.insertCell()});
  const a=document.getElementById('a');a.innerHTML='';DB.get('audit',[]).forEach(e=>{const tr=a.insertRow();tr.insertCell().textContent=e.t;tr.insertCell().textContent=e.a})}
 if(!me||me.role!=='admin'){document.querySelector('main').insertAdjacentHTML('afterbegin','<div class="msg e">Demo notice: log in as admin@jugo.demo for the real flow.</div>')}
 document.getElementById('clr').onclick=()=>{DB.set('audit',[]);draw()};draw();

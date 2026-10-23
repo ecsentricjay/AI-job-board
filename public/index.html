@@ -1,27 +1,29 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Login and Registration</title><link rel="stylesheet" href="style.css"><script src="app.js"></script></head><body>
-<script>nav()</script><main><div class="card" style="max-width:420px;margin:auto">
-<h1 id="h">Login</h1>
+<title>AI Recruit | Login</title><link rel="stylesheet" href="style.css"><script src="app.js"></script></head><body>
+<script>nav()</script>
+<div class="auth"><section class="hero"><h1>Hire smarter with explainable AI.</h1>
+<p>Upload a resume, let the platform parse it, and rank candidates with transparent, recruiter-controlled scoring.</p>
+<ul><li>Resume parsing for PDF and DOCX</li><li>Adjustable criteria weights</li><li>Criterion-level score breakdown</li><li>Human makes the final decision</li></ul></section>
+<section class="form"><div class="card">
+<h1 id="h">Welcome back</h1><small id="sub">Log in to continue</small>
 <label>Email</label><input id="email" type="email">
 <label>Password</label><input id="pw" type="password" autocomplete="off">
 <div id="reg" style="display:none"><label>Full name</label><input id="name">
-<label>Role</label><select id="role"><option value="seeker">Job Seeker</option><option value="recruiter">Recruiter</option></select></div>
+<label>I am a</label><select id="role"><option value="seeker">Job Seeker</option><option value="recruiter">Recruiter</option></select></div>
 <button id="go">Login</button><button class="alt" id="tg">Create account</button>
-<div id="m" class="msg"></div>
-<p><small>Demo only: no real password check here. The full system hashes passwords with bcrypt and uses JWT.
-Admin demo login: admin@jugo.demo (admin accounts are not created by public registration).</small></p></div></main>
+<div id="m" class="msg"></div></div></section></div>
 <script>
 let reg=false;const $=i=>document.getElementById(i);
 const say=(t,c)=>{$('m').className='msg '+c;$('m').textContent=t};
-if(!DB.get('users',null))DB.set('users',[{name:'System Admin',email:'admin@jugo.demo',role:'admin',status:'active'}]);
-$('tg').onclick=()=>{reg=!reg;$('reg').style.display=reg?'block':'none';$('h').textContent=reg?'Register':'Login';
+$('tg').onclick=()=>{reg=!reg;$('reg').style.display=reg?'block':'none';$('h').textContent=reg?'Create your account':'Welcome back';
+ $('sub').textContent=reg?'It takes less than a minute':'Log in to continue';
  $('go').textContent=reg?'Register':'Login';$('tg').textContent=reg?'Back to login':'Create account'};
 $('go').onclick=()=>{const email=$('email').value.trim().toLowerCase(),pw=$('pw').value;
  if(!/^\S+@\S+\.\S+$/.test(email))return say('Enter a valid email address.','e');
  if(pw.length<6)return say('Password must be at least 6 characters.','e');
  const users=DB.get('users',[]);let u=users.find(x=>x.email===email);
  if(reg){if(u)return say('Email already registered.','e');if(!$('name').value.trim())return say('Enter your full name.','e');
-  u={name:$('name').value.trim(),email,role:$('role').value,status:'active'};users.push(u);DB.set('users',users);log('Registered '+email+' ('+u.role+')')}
+  u={name:$('name').value.trim(),email,role:$('role').value,status:'active',org:'-'};users.push(u);DB.set('users',users);log('Registered '+email+' ('+u.role+')')}
  else if(!u)return say('Account not found. Please register.','e');
  if(u.status!=='active')return say('This account is suspended.','e');
  DB.set('session',u);log('Login '+email);
