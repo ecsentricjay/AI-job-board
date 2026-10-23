@@ -18,4 +18,3 @@
 ## Limits
 Data is stored in each browser's localStorage (one browser = one demo; use the same browser for all roles).
 Max CV size is 3 MB (Vercel's request limit). Scanned PDFs are not supported. Semantic matching uses a small lookup table, not Sentence-BERT.
-"# AI-job-board" 
