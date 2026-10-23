@@ -1,0 +1,24 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ranked Candidate List</title><link rel="stylesheet" href="style.css"><script src="app.js"></script></head><body>
+<script>nav()</script><main><div class="card"><h1>Ranked Candidates</h1><p id="vt"></p>
+<div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Candidate</th><th>Score</th><th>Skill</th><th>Exp.</th><th>Qual.</th><th>Cert.</th><th>Status / Decision</th></tr></thead><tbody id="rows"></tbody></table></div>
+<p><small>The AI ranks; the recruiter decides. Each criterion score is shown so the ranking can be explained.</small></p></div></main>
+<script>
+const v=DB.get('vacancy',DEF_VAC);if(!DB.get('cands',null))DB.set('cands',SEED);
+const vt=document.getElementById('vt');
+vt.textContent=v.title+' | weights: skills '+v.w.skill+', experience '+v.w.exp+', qualification '+v.w.qual+', certification '+v.w.cert;
+async function draw(){const cs=DB.get('cands',[]).filter(x=>x.applied!==false);let sc;
+ try{const r=await fetch('/api/score',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({vacancy:v,candidates:cs})});
+  if(!r.ok)throw 0;sc=await r.json()}catch(e){vt.textContent='Scoring service unreachable.';return}
+ const list=cs.map(x=>({x,s:sc.find(q=>q.id===x.id)})).sort((a,b)=>b.s.S-a.s.S);
+ const tb=document.getElementById('rows');tb.innerHTML='';
+ list.forEach((r,i)=>{const tr=tb.insertRow();const cell=t=>{const d=tr.insertCell();d.textContent=t;return d};
+  cell(i+1);cell(r.x.name);
+  const d=tr.insertCell();d.innerHTML='<b></b> <span class="bar"><i></i></span>';d.firstChild.textContent=r.s.S;d.querySelector('i').style.width=r.s.S+'%';
+  [r.s.skill,r.s.exp,r.s.qual,r.s.cert].forEach(n=>cell(n.toFixed(2)));
+  const a=tr.insertCell();a.textContent=r.x.status+' ';
+  [['Shortlist','alt','Shortlisted'],['Accept','ok','Accepted'],['Reject','bad','Rejected']].forEach(([t,k,st])=>{
+   const b=document.createElement('button');b.textContent=t;b.className=k;b.onclick=()=>{const all=DB.get('cands',[]);all.find(y=>y.id===r.x.id).status=st;
+    DB.set('cands',all);log(st+': '+r.x.name);draw()};a.appendChild(b)})})}
+draw();
+</script></body></html>

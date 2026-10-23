@@ -1,0 +1,46 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Job Seeker Dashboard</title><link rel="stylesheet" href="style.css"><script src="app.js"></script></head><body>
+<script>nav()</script><main>
+<div class="card"><h1>Job Seeker Dashboard</h1><h2>Upload resume and profile</h2>
+<label>Resume (PDF or DOCX, max 3 MB)</label><input id="f" type="file" accept=".pdf,.docx">
+<label>Full name</label><input id="name">
+<label>Skills (comma separated)</label><textarea id="sk" rows="2" placeholder="Python, SQL, Git, REST API"></textarea>
+<div class="grid"><div><label>Years of experience</label><input id="yrs" type="number" min="0" step="0.5" value="0"></div>
+<div><label>Highest qualification</label><select id="lv"></select></div>
+<div><label>Certifications (count)</label><input id="ct" type="number" min="0" value="0"></div></div>
+<button id="parse" class="alt">Parse resume</button><button id="save">Save profile</button><div id="m" class="msg"></div>
+<p><small>Parsed values can be corrected before saving. Email and phone are masked before parsing.</small></p></div>
+<div class="card"><h2>Vacancy &amp; application tracker</h2><div id="trk"></div></div></main>
+<script>
+const $=i=>document.getElementById(i);const say=(t,c)=>{$('m').className='msg '+c;$('m').textContent=t};
+$('lv').innerHTML=Object.keys(LEVELS).map(k=>`<option>${k}</option>`).join('');
+const me=DB.get('session',null);if(!me||me.role!=='seeker')say('Please log in as a job seeker first.','e');
+function show(){const v=DB.get('vacancy',DEF_VAC),c=DB.get('cands',[]).find(x=>me&&x.email===me.email);
+ $('trk').innerHTML='<b></b><br><small></small><p></p>';
+ $('trk').children[0].textContent=v.title;
+ $('trk').children[2].textContent=c?(c.applied?'Application status: '+c.status:'Profile saved. You have not applied yet.'):'Save your profile to apply.';
+ if(c&&!c.applied){const b=document.createElement('button');b.textContent='Apply for this vacancy';
+  b.onclick=()=>{const all=DB.get('cands',[]);all.find(x=>x.email===me.email).applied=true;DB.set('cands',all);log('Application from '+me.email);show()};$('trk').appendChild(b)}}
+$('save').onclick=()=>{if(!me||me.role!=='seeker')return say('Log in as a job seeker.','e');
+ const f=$('f').files[0];
+ if(!f)return say('Select a resume file.','e');
+ if(!/\.(pdf|docx)$/i.test(f.name))return say('Only PDF or DOCX files are accepted.','e');
+ if(f.size>3*1024*1024)return say('File is larger than 3 MB.','e');
+ const skills=$('sk').value.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+ if(!$('name').value.trim()||!skills.length)return say('Enter your name and at least one skill.','e');
+ const all=DB.get('cands',[]).filter(x=>x.email!==me.email);
+ const old=DB.get('cands',[]).find(x=>x.email===me.email);
+ all.push({id:me.email,email:me.email,name:$('name').value.trim(),skills,years:+$('yrs').value||0,level:LEVELS[$('lv').value],certs:+$('ct').value||0,status:'Submitted',applied:old?old.applied:false});
+ DB.set('cands',all);log('Resume uploaded by '+me.email);say('Profile saved.','s');show()};
+$('parse').onclick=()=>{const f=$('f').files[0];
+ if(!f)return say('Select a resume file.','e');
+ if(!/\.(pdf|docx)$/i.test(f.name))return say('Only PDF or DOCX files are accepted.','e');
+ if(f.size>3*1024*1024)return say('File is larger than 3 MB.','e');
+ say('Parsing...','s');const r=new FileReader();
+ r.onload=async()=>{try{const res=await fetch('/api/parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:f.name,data:r.result.split(',')[1]})});
+  const d=await res.json();if(!res.ok)return say(d.error||'Parse failed','e');
+  $('sk').value=d.skills.join(', ');$('yrs').value=d.years;$('lv').value=d.levelName;$('ct').value=d.certs;say('Resume parsed. Review the fields, then save.','s')}
+  catch(e){say('Could not reach the server.','e')}};
+ r.readAsDataURL(f)};
+show();
+</script></body></html>
